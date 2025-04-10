@@ -1,70 +1,102 @@
-import makeWASocket, {
-  Browsers,
-  useMultiFileAuthState,
-  DisconnectReason,
-  WAMessage,
-} from "baileys";
-import qrcode from "qrcode-terminal";
-import { Boom } from "@hapi/boom";
+import express, { urlencoded } from "express";
+import type { Request, Response } from "express";
+import { initWASocket } from "./services/bot/bot";
 import { logger } from "./utils/logger";
-import { FormattedMessage, getMessage } from "./utils/message";
-import MessageHandler from "./handlers/message";
+import multer from "multer";
+import fs from 'fs';
+import path from "path";
+import { imageFileTypes } from "./utils/filestype";
 
-export const initWASocket = async (): Promise<void> => {
-  const { state, saveCreds } = await useMultiFileAuthState("auth");
-  
-  // @ts-ignore
-  const sock = makeWASocket({
-    auth: state,
-    browser: Browsers.appropriate("Desktop"),
-    printQRInTerminal: false,
-  });
 
-  sock.ev.on("connection.update", ({ connection, lastDisconnect, qr }: any) => {
-    logger.info(
-      `Socket Connection Update: ${connection || ""} ${lastDisconnect || ""}`
-    );
+const upload = multer();
+const app = express();
+const port = 3000;
 
-    switch (connection) {
-      case "close":
-        logger.error("Conexão fechada");
-        // Remover o bot/deletar dados se necessário
-        const shouldReconnect =
-          (lastDisconnect.error as Boom)?.output?.statusCode !==
-          DisconnectReason.loggedOut;
+app.use(express.json());
+app.use(urlencoded({ extended: true }));
 
-        if (shouldReconnect) {
-          initWASocket();
-        }
-        break;
-      case "open":
-        logger.info("Bot Conectado");
-        break;
-    }
+const sessions = new Map<number, Awaited<ReturnType<typeof initWASocket>>>();
 
-    if (qr !== undefined) {
-      qrcode.generate(qr, { small: true });
-    }
-  });
+// Rota para iniciar sessão do bot
+app.get("/start/:id", async (req: Request, res: Response) : Promise<any> => {
+  try {
+    const id = Number(req.params.id);
 
-  sock.ev.on("messages.upsert", ({ messages }: { messages: WAMessage[] }) => {
-    for (let index = 0; index < messages.length; index++) {
-      const message = messages[index];
+    // Evita múltiplas conexões para o mesmo ID
+    if (!sessions.has(id)) {
+      const conn = await initWASocket(id);
+      const connect = await conn.connect();
 
-      const isGroup = message.key.remoteJid?.endsWith("@g.us");
-      const isStatus = message.key.remoteJid === "status@broadcast";
-
-      if (isGroup || isStatus) return;
-      // @ts-ignore
-      const formattedMessage: FormattedMessage | undefined =
-        getMessage(message);
-      if (formattedMessage !== undefined) {
-        MessageHandler(sock, formattedMessage);
+      if (!connect.connect) {
+        return res.status(200).json(connect);
       }
-    }
-  });
 
-  // Salvar as credenciais de autenticação
-  sock.ev.on("creds.update", saveCreds);
-};
-initWASocket();
+      sessions.set(id, conn);
+      return res.status(200).json({success:true, message:"Bot conectado com sucesso!", botId:id});
+    }
+
+    return res.status(200).json({success:true, message:`Usuário com id ${id} Já tem uma sessão iniciada!`});
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({success:false, message:"Erro ao conectar ao bot."});
+  }
+});
+
+app.post("/bot/message", upload.single("file"), async (req: Request, res: Response) => {
+  const file = req.file;
+  const userId = req.body.userId;
+  
+  if (userId) {
+    const { telefone, message } = req.body;
+    const conn = await initWASocket(userId);
+    const connect = await conn.connect();
+
+    if (connect.connect !== false) {
+
+      if (file) {
+        const fileBuffer = file.buffer;  
+        const fileName = file.originalname; 
+        const fileType = file.mimetype;  
+
+        const imageData = imageFileTypes.includes(fileType);
+        const filePath = path.resolve(__dirname, 'media', file.originalname);
+        fs.writeFileSync(filePath, fileBuffer);
+        
+        if (imageData === true) {
+          if (fs.existsSync(filePath)) {
+           const sendFilImage = await conn.sock.sendMessage(
+            telefone+"@s.whatsapp.net",
+            {
+              image: {
+                url: filePath
+              },
+              caption: message ? message : "",
+              ptv: false
+            }
+          );
+            if (sendFilImage.status === 1) {
+              res.status(200).json({success:true, message:"Mensagem enviado com sucesso!", id:userId});
+              return;
+            }
+          return;
+          } 
+          res.status(200).json({success:false, message:"Não conseguimos localizar o arquivo para o envio!"});
+        }
+      }
+    
+      const enviarMessage = await conn.sock.sendMessage(telefone + "@s.whatsapp.net", { text: message });
+      if (enviarMessage.status === 1) {
+        res.status(200).json({success:true, message:"Mensagem enviado com sucesso!", id:userId});
+        return;
+      }
+      res.status(200).json({success:false, message:"Mensagem não enviada!", id:userId})
+      return;
+    }
+    res.status(400).json({success:false, message:"Usuário não encontrado ou desconectado!", id:userId}); 
+  } 
+    res.status(400).json({success:false, message:"Usuário não encontrado!", id:userId});
+});
+
+app.listen(port, () => {
+  console.log(`🚀 Server is running on http://localhost:${port}`);
+});
