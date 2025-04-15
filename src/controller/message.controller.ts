@@ -28,12 +28,14 @@ class messageController {
       const { telefone, mensagem, description } = req.body;
 
       const normalizarNumero = (numero: string): string => numero.replace(/\D/g, '');
-      const validarNumeroWhatsappNormalizado = (numero: string): boolean =>
-        /^244\d{9}$/.test(normalizarNumero(numero));
 
-      const validNumber = validarNumeroWhatsappNormalizado(telefone);
+      const validarNumeroWhatsappBR = (numero: string): boolean => {
+        const numeroNormalizado = normalizarNumero(numero);
+        return /^55\d{2}9\d{8}$/.test(numeroNormalizado);  
+      };
+      
 
-      if (!validNumber) {
+      if (!validarNumeroWhatsappBR) {
         res.status(401).json({
           success: false,
           message: "Número inserido de forma incorreta, envie no formato 244XXXXXXXXX sem caracteres especiais"
@@ -59,8 +61,14 @@ class messageController {
         if (imageFileTypes.includes(fileType)) {
           const salt = Math.floor(Math.random() * 3000);
           const newNameFile = `${salt}_${file.originalname}`;
-          const filePath = path.resolve(__dirname, "../media", newNameFile);
+          const pasta = path.resolve(__dirname, "../media");
 
+          if (!fs.existsSync(pasta)) {
+            fs.mkdirSync(pasta, { recursive: true, })
+          }
+
+          const filePath = path.resolve(__dirname, "../media", newNameFile);
+           
           fs.writeFileSync(filePath, fileBuffer);
 
           if (fs.existsSync(filePath)) {
@@ -72,8 +80,8 @@ class messageController {
 
             if (sendFilImage?.status === 1) {
               res.status(200).json({ success: true, message: "Imagem enviada com sucesso!" });
+              fs.unlinkSync(filePath)
               setTimeout(async () => {
-                fs.unlinkSync(filePath)
                 await initWASocket(userId);
                 conn.connect();
               }, 1000);

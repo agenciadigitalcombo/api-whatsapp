@@ -9,7 +9,7 @@ import { GenereteId, GenereteTokenNoExpiry } from "../utils/genereteId";
 class AppController {
   async register(req: Request, res: Response) {
     const validation = userSchema.safeParse(req.body);
-
+    
     if (!validation.success) {
       return res.status(400).json({
         success: false,
