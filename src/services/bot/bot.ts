@@ -11,12 +11,12 @@ import { logger } from "../../utils/logger";
 import { FormattedMessage, getMessage } from "../../utils/message";
 import MessageHandler from "../../handlers/message";
 
-export const initWASocket = async (id: number): Promise<{
+export const initWASocket = async (id: string): Promise<{
   sock: any;
   connect: () => Promise<{ connect: boolean; qrcode?: string }>;
   sendMessages: (numero: string | number, mensagem: string) => Promise<void>;
 }> => {
-  const { state, saveCreds } = await useMultiFileAuthState(`./auth/_user${id}`);
+  const { state, saveCreds } = await useMultiFileAuthState(`./auth/${id}`);
 
   const sock = makeWASocket({
     auth: state,
@@ -34,13 +34,14 @@ export const initWASocket = async (id: number): Promise<{
           case "close":
             logger.error("Conexão fechada");
             const shouldReconnect =
-              (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+              (lastDisconnect?.error as Boom)
+              ?.output
+              ?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) {
               initWASocket(id).catch((err) => logger.error("Erro ao reconectar:", err));
             }
             resolve({ connect: false });
             break;
-
           case "open":
             logger.info("Bot conectado com sucesso.");
             logger.info("Sessão criada para:", sock.user?.id);

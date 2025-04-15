@@ -6,33 +6,54 @@ import multer from "multer";
 import fs from 'fs';
 import path from "path";
 import { imageFileTypes } from "./utils/filestype";
-
-
+import { AppEnv } from "./config/env";
+import cors from "cors";
+import { FilterNumber } from "./filter/uri/number";
+import { GenereteId, GenereteTokenNoExpiry } from "./utils/genereteId";
+import QR from "qrcode";
+import migrations from "./database/migrations/migrations";
+import Routes from "./router/Routes";
 const upload = multer();
 const app = express();
-const port = 3000;
+const port = AppEnv.port;
 
+migrations.createTable().catch(console.error);
+
+app.use(Routes)
 app.use(express.json());
 app.use(urlencoded({ extended: true }));
+app.use(cors({
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST'],
+  origin: "*"
+}))
 
-const sessions = new Map<number, Awaited<ReturnType<typeof initWASocket>>>();
+const sessions = new Map<string, Awaited<ReturnType<typeof initWASocket>>>();
 
-// Rota para iniciar sessão do bot
-app.get("/start/:id", async (req: Request, res: Response) : Promise<any> => {
+app.get("/whatsapi/start", FilterNumber, async (req: Request, res: Response) : Promise<any> => {
   try {
-    const id = Number(req.params.id);
-
-    // Evita múltiplas conexões para o mesmo ID
+    const id = GenereteId();
     if (!sessions.has(id)) {
       const conn = await initWASocket(id);
       const connect = await conn.connect();
 
       if (!connect.connect) {
+        const token = await GenereteTokenNoExpiry({id:id});
+        if (connect.qrcode) {
+          const qrCodeImage = QR.toDataURL(connect.qrcode);
+        }
         return res.status(200).json(connect);
       }
-
+      
       sessions.set(id, conn);
-      return res.status(200).json({success:true, message:"Bot conectado com sucesso!", botId:id});
+      return res.status(200).json(
+        {
+          success:true, 
+          message:"Bot conectado com sucesso!", 
+          botId:id,
+          details:"Sua sessão foi iniciada, você ira usar o seu id: `` "+ id +" `` para para se conectar sempre que necessário."
+        }
+        );
     }
 
     return res.status(200).json({success:true, message:`Usuário com id ${id} Já tem uma sessão iniciada!`});
@@ -61,6 +82,7 @@ app.post("/bot/message", upload.single("file"), async (req: Request, res: Respon
         const imageData = imageFileTypes.includes(fileType);
         const filePath = path.resolve(__dirname, 'media', file.originalname);
         fs.writeFileSync(filePath, fileBuffer);
+      
         
         if (imageData === true) {
           if (fs.existsSync(filePath)) {
@@ -97,6 +119,5 @@ app.post("/bot/message", upload.single("file"), async (req: Request, res: Respon
     res.status(400).json({success:false, message:"Usuário não encontrado!", id:userId});
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Server is running on http://localhost:${port}`);
-});
+
+app.listen(port, () => { console.log(`http://localhost:${port}`); });
