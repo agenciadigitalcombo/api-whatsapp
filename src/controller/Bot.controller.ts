@@ -37,7 +37,7 @@ class BotController {
           return;
         }
         res.status(200).json({ 
-          message: "Conexão fechata tente reconectar novamente", 
+          message: "Conexão fechada tente reconectar novamente", 
           success:true, 
           connected:false}
         );
