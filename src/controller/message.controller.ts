@@ -81,14 +81,11 @@ class messageController {
             if (sendFilImage?.status === 1) {
               res.status(200).json({ success: true, message: "Imagem enviada com sucesso!" });
               fs.unlinkSync(filePath)
-              setTimeout(async () => {
                 await initWASocket(userId);
                 conn.connect();
-              }, 1000);
               return;
             }
           }
-
           res.status(500).json({ success: false, message: "Erro ao enviar imagem ou arquivo não localizado." });
           return;
         }

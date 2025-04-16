@@ -14,7 +14,7 @@ export const createUsersQuery = (): string => {
 export const createSessionsQuery = (): string => {
   return `
     CREATE TABLE IF NOT EXISTS whatsapp_sessions (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id INT  PRIMARY KEY NOT NULL AUTO_INCREMENT,
       user_id INT NOT NULL,
       session_name VARCHAR(100) UNIQUE NOT NULL,
       phone_number VARCHAR(100) NOT NULL,
@@ -111,6 +111,11 @@ export const selectByEmail = (): string => {
 
 export const selectWhatsappSession = (): string => {
   return `SELECT * FROM whatsapp_sessions WHERE session_name = ?`;
+}
+
+
+export const selectWhatsappSessionPhoneNumber = (): string => {
+  return `SELECT * FROM whatsapp_sessions WHERE phone_number = ? ORDER BY id DESC`;
 }
 
 export const insertSession = (): string => {
