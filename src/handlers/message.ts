@@ -15,9 +15,8 @@ const saudacoes = [
   'oi, meu povo', 'como vai voce?', 'e ai, tio', 'oi, querido', 'oi, minha gente'
 ];
 
-
 const MessageHandler = async (bot: WASocket, message: FormattedMessage) => {
-  if (message.content === 'Oi!') {
+  if (message.content === 'oi') {
     await bot.sendMessage(message.key.remoteJid!, { text: 'Olá! Aqui quem fala é o bot!' });
   } else if (message.content && saudacoes.includes(message.content.toLocaleLowerCase())) {
     await bot.sendMessage(message.key.remoteJid!, { text: 'Olá! Como posso ajudar você?' });

@@ -19,7 +19,8 @@ Routes.use(cors({
 const URI = AppEnv.baseUri;
 Routes.post(`${URI}/register`, (req, res, next) => { AppController.register(req, res).catch(next); });
 Routes.post(`${URI}/login`, (req, res, next) => { AppController.login(req, res).catch(next); });
-Routes.post(`${URI}/messages/send`, upload.single("file"), TokenValidate, messageController.send);
+Routes.post(`${URI}/messages/send`, TokenValidate, messageController.send);
+Routes.post(`${URI}/messages/files/send`, upload.single("file"), TokenValidate, messageController.sendFiles);
 Routes.get(`${URI}/connect`, TokenValidate, BotController.connect);
 Routes.get(`${URI}/session/status`, TokenValidate, BotController.getConnection);
 Routes.get(`${URI}`, (req, res)=>{ res.send("olla seja bem vindo");});
