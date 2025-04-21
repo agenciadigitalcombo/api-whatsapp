@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { documentFileTypes, imageFileTypes, videoFileTypes } from "../utils/filestype";
+import { audioFileTypes, documentFileTypes, imageFileTypes, videoFileTypes } from "../utils/filestype";
 import { initWASocket } from "../services/bot/bot";
 import jwt from "jsonwebtoken";
 import path from "path";
@@ -94,6 +94,8 @@ class messageController {
 
     const { telefone, description } = req.body;
 
+    const parsedCaption = (description || "").replace(/\\n/g, '\n');
+
     const normalizarNumero = (numero: string): string => numero.replace(/\D/g, '');
     const validarNumeroWhatsappBR = (numero: string): boolean => {
       const numeroNormalizado = normalizarNumero(numero);
@@ -153,7 +155,7 @@ class messageController {
       if (imageFileTypes.includes(fileType)) {
         const send = await conn.sock.sendMessage(telefoneFormatado, {
           image: { url: filePath },
-          caption: description || "",
+          caption: parsedCaption ? parsedCaption : "",
           ptv: false,
         })
 
@@ -180,7 +182,7 @@ class messageController {
             video: {
               url: filePath,
             },
-            caption: description ? description : "",
+            caption: parsedCaption ? parsedCaption : "",
             ptv: false
           }
         )
@@ -192,11 +194,14 @@ class messageController {
           })
           return;
         }
-        fs.unlinkSync(filePath);
+       
         res.status(200).json({
           success: true,
           message: "Vídeo enviado com sucesso"
         })
+        setTimeout(()=>{
+          fs.unlinkSync(filePath);
+        },3000)
         return;
       }
 
@@ -207,10 +212,12 @@ class messageController {
             document: {
               url: filePath,
             },
-            caption: description ? description : "",
+            fileName: file.originalname,
+            caption: parsedCaption ? parsedCaption : "",
             ptv: false
           }
         )
+
         if (sendVideo.status !== 1) {
           fs.unlinkSync(filePath);
           res.status(200).json({
@@ -219,13 +226,45 @@ class messageController {
           })
           return;
         }
-        fs.unlinkSync(filePath);
+        
         res.status(200).json({
           success: true,
           message: "Documento enviado com sucesso!"
         })
+        setTimeout(()=>{
+          fs.unlinkSync(filePath);
+        },3000)
         return;
       }
+
+      if (audioFileTypes.includes(fileType)) {
+        const sendAudio = await conn.sock.sendMessage(telefoneFormatado, {
+          audio: { url: filePath },
+          mimetype: fileType,
+          fileName: file.originalname,
+          ptt: false, 
+        });
+      
+        if (sendAudio.status !== 1) {
+          res.status(401).json({
+            success: false,
+            message: "Erro no envio do áudio"
+          });
+          fs.unlinkSync(filePath);
+          return;
+        }
+        
+      
+        res.status(200).json({
+          success: true,
+          message: "Áudio enviado com sucesso!"
+        });
+        setTimeout(()=>{
+          fs.unlinkSync(filePath);
+        },3000)
+        return;
+      }
+      
 
       fs.unlinkSync(filePath);
       res.status(401).json({
