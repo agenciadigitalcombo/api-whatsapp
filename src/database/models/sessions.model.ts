@@ -1,5 +1,5 @@
 import { conn } from "../config/connect";
-import { insertSession, selectWhatsappSession, selectWhatsappSessionPhoneNumber } from "../query/querys";
+import { deleteSessionsQuery, insertSession, selectWhatsappSession, selectWhatsappSessionPhoneNumber } from "../query/querys";
 
 class sessionsWatsapp {
   getSessions(data: any) {
@@ -30,10 +30,24 @@ class sessionsWatsapp {
     })
   }
 
+  selectByUserID(user_id: number | string) {
+    return new Promise((resolve, reject) => {
+      conn.query(`SELECT * FROM whatsapp_sessions WHERE whatsapp_sessions.user_id = ?`, [user_id], (err, data:any)=>{
+        if (err) {
+          return reject(err)
+        }
+        if (data.length === 0) {
+          return resolve({ success: false, data: null });
+        }
+        resolve({ success: true, data: data[0] });
+      })
+    })
+  }
+
   deleteSession(id:number){
     return new Promise((resolve, reject) => {
       conn.query(
-          `DELETE FROM whatsapp_sessions WHERE whatsapp_sessions.id = ?`,
+        deleteSessionsQuery(),
         [id],
         (err, result) => {
           if (err) {

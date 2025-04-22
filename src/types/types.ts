@@ -34,6 +34,6 @@ export interface IWebhook {
   id?: number;
   user_id: number;
   url: string;
-  event: string;
+  is_active: boolean;
   created_at?: string;
 }

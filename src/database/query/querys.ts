@@ -124,3 +124,8 @@ export const insertSession = (): string => {
     VALUES (?, ?, ?, ?)
   `;
 }
+
+// DELETE SESSIONS
+export const deleteSessionsQuery = () : string=>{
+ return `DELETE FROM whatsapp_sessions WHERE whatsapp_sessions.id = ?`;
+}
