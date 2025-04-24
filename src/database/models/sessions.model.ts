@@ -1,7 +1,20 @@
 import { conn } from "../config/connect";
-import { deleteSessionsQuery, insertSession, selectWhatsappSession, selectWhatsappSessionPhoneNumber } from "../query/querys";
+import { deleteSessionsQuery, insertSession, selectAllWhatsappSession, selectWhatsappSession, selectWhatsappSessionPhoneNumber } from "../query/querys";
 
 class sessionsWatsapp {
+  getAllSessions(){
+    return new Promise((resolve, reject) => {
+      conn.query(selectAllWhatsappSession(), (err, result: any) => {
+        if (err) {
+          return reject(err);
+        }
+        if (result.length === 0) {
+          return resolve({ success: false, data: null });
+        }
+        resolve({ success: true, data: result });
+      });
+    });
+  }
   getSessions(data: any) {
     return new Promise((resolve, reject) => {
       conn.query(selectWhatsappSession(), [data], (err, result: any) => {
@@ -73,6 +86,21 @@ class sessionsWatsapp {
       );
     });
   }
+
+  updateSession(data: { user_id: number; status: string }) {
+    return new Promise((resolve, reject) => {
+      conn.query(
+        `UPDATE whatsapp_sessions SET status = ? WHERE whatsapp_sessions.user_id = ?`,
+        [data.status, data.user_id], 
+        (err, result) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(result);
+        }
+      );
+    });
+  }  
 }
 
 export default new sessionsWatsapp();

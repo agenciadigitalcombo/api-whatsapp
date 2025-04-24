@@ -52,7 +52,7 @@ class WebhookModel {
       conn.query(
         `SELECT * FROM webhooks WHERE user_id = ?`,
         [user_id],
-        (err, data: any) => {
+        (err, data: any[]) => {
           if (err) {
             return reject({
               success: false,
@@ -60,11 +60,12 @@ class WebhookModel {
               error: err,
             });
           }
-          resolve({ success: true, data });
+          resolve({ success: true, data: data[0] });
         }
       );
     });
   }
+  
 
   update(user_id: number, data: Partial<IWebhook>) {
     return new Promise((resolve, reject) => {

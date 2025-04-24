@@ -113,6 +113,10 @@ export const selectWhatsappSession = (): string => {
   return `SELECT * FROM whatsapp_sessions WHERE session_name = ?`;
 }
 
+export const selectAllWhatsappSession = (): string => {
+  return `SELECT * FROM whatsapp_sessions `;
+}
+
 
 export const selectWhatsappSessionPhoneNumber = (): string => {
   return `SELECT * FROM whatsapp_sessions WHERE phone_number = ? ORDER BY id DESC`;
