@@ -77,13 +77,12 @@ class messageController {
         externalAdReply: {
           title: linkPreview && linkPreview.title ? linkPreview.title ?? "Url sem titulo" : "Sem título" ,
           body: 'Clique e veja o site',
-          thumbnailUrl: linkPreview && linkPreview.images ? linkPreview.images[0] ?? linkPreview?.images : null,
+          // thumbnailUrl: linkPreview && linkPreview.images ? linkPreview.images[0] ?? null : null,
           thumbnail: thumbnailBuffer,
           mediaType: 1,
-          previewType: 'VIDEO',
-          renderLargerThumbnail: true,
+          previewType: 'PHOTO',
+          renderLargerThumbnail: false,
           sourceUrl: linkPreview ? linkPreview.url ?? null : null,
-          url: linkPreview && linkPreview.url ?  linkPreview.url ?? null : null,
         }
       } : null;
 
