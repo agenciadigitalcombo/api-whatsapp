@@ -10,6 +10,7 @@ import WebhookController from "../controller/Webhook.controller";
 
 const Routes = express.Router();
 const upload = multer();
+Routes.use(express.text());
 Routes.use(express.json());
 Routes.use(urlencoded({ extended: true }));
 Routes.use(cors({

@@ -9,10 +9,12 @@ const app = express();
 const port = AppEnv.port;
 migrations.createTable().catch(console.error);
 app.use(Routes);
+import { getUrlInfo  } from "baileys";
 
 cron.schedule("*/30 * * * *", async () => {
   await reportWebhookError();
 });
 
 app.listen(port, () => { console.log(`http://localhost:${port}`); });
+
 

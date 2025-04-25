@@ -4,6 +4,12 @@ import { initWASocket } from "../services/bot/bot";
 import jwt from "jsonwebtoken";
 import path from "path";
 import fs from "fs";
+import { getLinkPreview } from "link-preview-js";
+import { CustomLinkPreview } from "../types/types";
+import getImageBuffer from "../utils/getImageURL";
+
+
+
 
 class messageController {
   async send(req: Request, res: Response): Promise<void> {
@@ -56,12 +62,41 @@ class messageController {
         return;
       }
 
+      const links = mensagem.match(/(https?:\/\/[^\s]+)/g);
+
+      const linkPreview: CustomLinkPreview | null = links
+      ? await getLinkPreview(links[0]) as CustomLinkPreview
+      : null;
+
+      const thumbnailBuffer = linkPreview && linkPreview.images && linkPreview.images[0]
+      ? await getImageBuffer(linkPreview.images[0])
+      : null;
+        
+      //--Dados para a preview 
+      const previewLinkData = links ?  {
+        externalAdReply: {
+          title: linkPreview && linkPreview.title ? linkPreview.title ?? "Url sem titulo" : "Sem título" ,
+          body: 'Clique e veja o site',
+          thumbnailUrl: linkPreview && linkPreview.images ? linkPreview.images[0] ?? linkPreview?.images : null,
+          thumbnail: thumbnailBuffer,
+          mediaType: 1,
+          previewType: 'VIDEO',
+          renderLargerThumbnail: true,
+          sourceUrl: linkPreview ? linkPreview.url ?? null : null,
+          url: linkPreview && linkPreview.url ?  linkPreview.url ?? null : null,
+        }
+      } : null;
+
+
       const telefoneFormatado = normalizarNumero(telefone) + "@s.whatsapp.net";
       // Se for só mensagem de texto
-      const enviarMessage = await conn.sock.sendMessage(telefoneFormatado, { text: mensagem });
-
+      const enviarMessage = await conn.sock.sendMessage(telefoneFormatado, {
+        text: mensagem.toString(),
+        contextInfo: previewLinkData
+      });
+      
       if (enviarMessage?.status === 1) {
-        res.status(200).json({ success: true, message: "Mensagem enviada com sucesso!" });
+        res.status(200).json({ success: true, message: "Mensagem enviada com sucesso!", links:links});
       } else {
         res.status(500).json({ success: false, message: "Mensagem não enviada!" });
       }
@@ -168,6 +203,7 @@ class messageController {
             image: { url: filePath },
             caption: parsedCaption ? parsedCaption : "",
             ptv: false,
+            linkPreview: true
           }
         );
 

@@ -37,3 +37,17 @@ export interface IWebhook {
   is_active: boolean;
   created_at?: string;
 }
+
+
+export interface CustomLinkPreview {
+  url: string;
+  title?: string;
+  siteName?: string;
+  description?: string;
+  mediaType?: string;
+  contentType?: string;
+  images?: string[];
+  videos?: string[];
+  favicons?: string[];
+  charset?: string;
+}

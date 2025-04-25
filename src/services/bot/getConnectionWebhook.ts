@@ -1,15 +1,8 @@
 import makeWASocket, {
   Browsers,
   useMultiFileAuthState,
-  DisconnectReason,
-  WAMessage,
   ConnectionState,
 } from "baileys";
-import qrcode from "qrcode-terminal";
-import { Boom } from "@hapi/boom";
-import { logger } from "../../utils/logger";
-import { FormattedMessage, getMessage } from "../../utils/message";
-import MessageHandler from "../../handlers/message";
 
 const silentLogger = {
   info: () => {},

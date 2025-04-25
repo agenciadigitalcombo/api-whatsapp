@@ -39,6 +39,9 @@ async function main() {
     } 
   }
 
+  logger.info("Instalando Pacotes...");
+  rodarComando("npm install");
+
   // Executa o build
   logger.info('Executando build...');
   rodarComando('npm run build');

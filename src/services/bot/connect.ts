@@ -2,13 +2,11 @@ import makeWASocket, {
   Browsers,
   useMultiFileAuthState,
   DisconnectReason,
-  WAMessage,
   ConnectionState,
 } from "baileys";
 import qrcode from "qrcode-terminal";
 import { Boom } from "@hapi/boom";
 import { logger } from "../../utils/logger";
-import MessageHandler from "../../handlers/message";
 
 export const StartConnection = async (id: string): Promise<{
   sock: any;
