@@ -7,8 +7,8 @@ async function getThumbnailBuffer(url: string, size: number = 300): Promise<Buff
 
     const buffer = await sharp(response.data)
       .resize(size, size, {
-        fit: 'cover',
-        background: "#ffffff"  
+        fit: 'contain',
+        background: "#ffffff",
       })
       .flatten({ background: "#ffffff" }) 
       .jpeg({ quality: 100 })
