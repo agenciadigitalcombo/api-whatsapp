@@ -109,6 +109,11 @@ export const selectByEmail = (): string => {
   return `SELECT * FROM users WHERE email = ?`
 }
 
+export const selectById = (): string => {
+  return `SELECT * FROM users WHERE id = ?`
+}
+
+
 export const selectWhatsappSession = (): string => {
   return `SELECT * FROM whatsapp_sessions WHERE session_name = ?`;
 }

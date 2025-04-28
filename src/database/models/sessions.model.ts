@@ -87,11 +87,11 @@ class sessionsWatsapp {
     });
   }
 
-  updateSession(data: { user_id: number; status: string }) {
+  updateSession({user_id, status} : { user_id: number; status: string }) {
     return new Promise((resolve, reject) => {
       conn.query(
         `UPDATE whatsapp_sessions SET status = ? WHERE whatsapp_sessions.user_id = ?`,
-        [data.status, data.user_id], 
+        [status, user_id], 
         (err, result) => {
           if (err) {
             return reject(err);

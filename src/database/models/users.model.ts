@@ -1,6 +1,6 @@
 import { IUser } from "../../types/types";
 import { conn } from "../config/connect";
-import { insertUserQuery, selectByEmail } from "../query/querys";
+import { insertUserQuery, selectByEmail, selectById } from "../query/querys";
 
 class usersModel {
   create(data: IUser) {
@@ -22,6 +22,19 @@ class usersModel {
   getByEmail(email: string) {
     return new Promise((resolve, reject) => {
       conn.query(selectByEmail(), [email], (err, result: any) => {
+        if (err) return reject(err);
+        
+        if (result.length === 0) {
+          return resolve({ success: false, data: null })
+        }
+        return resolve({ success: true, data: result[0] });
+      });
+    })
+  }
+
+  getById(email: string) {
+    return new Promise((resolve, reject) => {
+      conn.query(selectById(), [email], (err, result: any) => {
         if (err) return reject(err);
         
         if (result.length === 0) {

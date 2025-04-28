@@ -32,16 +32,7 @@ class WebhookController {
       }
 
       const user_id = userData.data.id;
-      const sessionData = await sessionsModel.selectByUserID(Number(user_id)) as { success: boolean, data: any };
-
-      if (!sessionData.success || !sessionData.data?.phone_number) {
-        res.status(404).json({
-          success: false,
-          message: "Nenhuma sessão do WhatsApp foi encontrada. Por favor, inicie a sessão!",
-        });
-        return;
-      }
-
+   
       const registerData = {
         user_id,
         url,

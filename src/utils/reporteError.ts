@@ -24,7 +24,7 @@ export const reportWebhookError = async (): Promise<void> => {
 
             if (!webHookData.data) continue;
 
-            const { url, user_id } = webHookData.data;
+            const { url } = webHookData.data;
 
             const sendData = await fetch(url, {
               method: "POST",
