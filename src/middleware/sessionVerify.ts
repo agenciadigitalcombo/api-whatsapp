@@ -1,5 +1,5 @@
 import sessionsModel from "../database/models/sessions.model";
-import fs from "fs";
+import fs from "fs/promises";
 export default async function sessionVerify(number: string): Promise<boolean> {
   try {
     const dataSession: any = await sessionsModel.getSessionNumber(number);
@@ -7,7 +7,7 @@ export default async function sessionVerify(number: string): Promise<boolean> {
     if (dataSession?.success && dataSession.data.length > 1) {
       const deleteData = await sessionsModel.deleteSession(dataSession.data[0].id);
       if (deleteData === true) {
-        fs.rmdirSync("../auth/"+dataSession.session_name);
+        await fs.rmdir("./auth/"+dataSession.session_name);
 
         return !!deleteData;
       }
