@@ -11,9 +11,14 @@ migrations.createTable().catch(console.error);
 app.use(Routes);
 import { getUrlInfo  } from "baileys";
 
-cron.schedule("*/30 * * * *", async () => {
+// cron.schedule("*/1 * * * *", async () => {
+//   await reportWebhookError();
+// });
+
+
+setInterval( async () => {
   await reportWebhookError();
-});
+}, 5000);
 
 app.listen(port, () => { console.log(`http://localhost:${port}`); });
 

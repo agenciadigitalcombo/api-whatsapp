@@ -1,4 +1,5 @@
 import sessionsModel from "../database/models/sessions.model";
+import usersModel from "../database/models/users.model";
 import webhookModel from "../database/models/webhook.model";
 import { GetConnectionWebHook } from "../services/bot/getConnectionWebhook";
 import { logger } from "./logger";
@@ -25,6 +26,10 @@ export const reportWebhookError = async (): Promise<void> => {
             if (!webHookData.data) continue;
 
             const { url } = webHookData.data;
+            var userData : any = await usersModel.getById(session.user_id);
+            var { data } = userData;
+            
+
 
             const sendData = await fetch(url, {
               method: "POST",
@@ -35,6 +40,8 @@ export const reportWebhookError = async (): Promise<void> => {
                 type: "REPORT_ERROR_DISCONNECT",
                 message: "Seu Bot está desconectado, é provável que não seja possível fazer o envio de mensagens. Por favor, volte a conectar!",
                 hora: new Date().toLocaleString('pt-BR'),
+                email_user:data?.email,
+                telefone:session.phone_number?.split(":")[0],
               }),
             });
 
